@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const { Payment, MercadoPagoConfig } = require('mercadopago');
 
-const client = new MercadoPagoConfig({ accessToken: process.env.ACCESS_TOKEN, options: { integratorId: "dev_630851333e2711efbb7b8e3c267079e3" } })
+const client = new MercadoPagoConfig({ accessToken: process.env.ACCESS_TOKEN, options: { integratorId: "dev_code" } })
 
 module.exports = app => {
 	const createOrder = async (req, res) => {
