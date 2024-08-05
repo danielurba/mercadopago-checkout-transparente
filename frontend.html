@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout MercadoPago Sandbox</title>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://kit.fontawesome.com/6ea1366a7a.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div id="loading-payment" class="box-loading-payment">
+        <div class="box-loading">
+            <div class="box-gif">
+                <img class="rotate" id="gif-loading" src="" alt="">
+            </div>
+            <div class="box-text-loading">
+                <h3 id="message-loading"></h3>
+                <p>Aguarde um momento</p>
+            </div>
+        </div>
+    </div>
+    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; background-color: #ededed;">
+        <div id="container-form-elementor" style="width: 35%;">
+            <form id="form-payment" class="box-form-payment">
+                <div class="box-information-purchase">
+                    <div class="box-image">
+                        <img id="image-course" src="" alt="">
+                    </div>
+                </div>
+                <div class="box-customer-inputs">
+                    <div class="box-inputs">
+                        <label for="customerName">Nome Completo:</label>
+                        <input type="text" id="customerName" placeholder="Nome Completo" required>
+                    </div>
+                    <div class="box-inputs">
+                        <label for="customerEmail">Email:</label>
+                        <input type="email" id="customerEmail" placeholder="Email" required>
+                    </div>
+                    <div class="box-inputs">
+                        <label for="customerCpfCnpj">CPF/CNPJ:</label>
+                        <input maxlength="18" id="customerCpfCnpjView" placeholder="999.999.999-99" oninput="onInputCpf(this)" type="text" require>
+                        <input type="hidden" id="customerCpfCnpj" require>
+                        <select style="display: none;" disabled id="typeDocument"></select>
+                    </div>
+                    <div class="box-row-inputs">
+                        <div style="width: 15%;" class="box-inputs box-input-ddi">
+                            <label for="customerDDI">DDI:</label>
+                            <select name="customerDDI" id="customerDDI">
+                                <option value="55">+55</option>
+                            </select>
+                        </div>
+                        <div class="box-inputs box-input-phone">
+                            <label for="customerPhone">Telefone:</label>
+                            <input oninput="formatPhone(this)" maxlength="15" type="text" id="customerPhone" placeholder="(99) 99999-9999" required>
+                        </div>
+                    </div>
+                </div>
+                <div id="box-types-payments" class="box-type-payments">
+                    <a id="credit" class="active-button-payments">Cartão de Crédito e Débito</a>
+                    <a id="pix" class="">PIX</a>
+                </div>
+                <div id="box-types-containers" class="container-option-payment">
+                    <div id="box-error-credit-card" class="box-error-credit-card">
+                        <div class="box-ball-declined">
+                            <i class="fa-solid fa-xmark fa-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 id="error">Transação não aprovada.</h3>
+                            <p id="info-error">Experimente outro cartão ou meio de pagamento.</p>
+                        </div>
+                    </div>
+                    <div id="credit" class="container-card-credit box-activate">
+                        <div class="box-inputs-credit">
+                            <div class="box-inputs">
+                                <label for="cardNumber">Número do cartão</label>
+                                <div class="box-input-brand">
+                                    <input style="border: none; margin: 0px; padding: 0px;" oninput="changeNumberCard(event)" type="text" maxlength="19" id="cardNumber">
+                                    <img id="card-brand" src="" alt="Bandeira do Cartão" />
+                                    <select style="display: none;" disabled id="cardIssuer"></select>
+                                </div>
+                            </div>
+                            <div class="box-inputs">
+                                <label for="cardHolderName">Nome do titular</label>
+                                <input type="text" id="cardHolderName" placeholder="Nome (igual no cartão)" required>
+                            </div>
+                            <div class="box-dados-expirate">
+                                <div class="box-inputs">
+                                    <label for="cardExpiration">Data de vencimento</label>
+                                    <input oninput="formatExpiryDate(event)" type="text" id="cardExpiration" required>
+                                </div>
+                                <div class="box-inputs">
+                                    <label for="cardCVV">Código de segurança</label>
+                                    <input oninput="formatInputNumber(event)" maxlength="4" type="text" id="cardCVV" required>
+                                </div>
+                            </div>
+                            <div class="box-inputs">
+                                <label for="cardInstallments">Selecione o número de parcelas</label>
+                                <select title="Digite o número do seu cartão para ter acesso as parcelas" name="cardInstallments" id="cardInstallments"></select>
+                            </div>
+                            <div class="box-button-purchase">
+                                <button id="purchase" type="submit">Pagar</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="pix" class="container-card-pix">
+                        <div>
+                            <img src="" alt="">
+                        </div>
+                        <div>
+                            <p>
+                                Use o Pix, é rápido e o pagamento é instantâneo. Basta gerar o QR Code e realizar o pagamento através do PagBank ou app da instituição financeira de sua preferência.
+                            </p>
+                        </div>
+                        <div class="box-button-pix">
+                            <button id="button-pix" onclick="processPaymentPix()">Pagar com Pix</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-details-payments">
+                    <div class="box-title-details">
+                        <h3>Detalhes da compra</h3>
+                    </div>
+                    <div class="box-details-payment">
+                        <h4 id="name-course"></h4>
+                        <h5 id="value-course"></h5>
+                    </div>
+                </div>
+            </form>
+
+            <div id="conclusion-payment" class="box-conclusion-payment">
+                <div id="payment-details-conclusion" class="payment-details-conclusion">
+                    <div class="box-icon-conclusion">
+                        <div id="box-status-icons" class="box-icon-status"></div>
+                        <h2 id="text-status"></h2>
+                    </div>
+                    <div class="box-value-payment">
+                        <h4>Valor do pagamento</h4>
+                        <h5 id="value-purchase"></h5>
+                    </div>
+                    <div class="box-informations-status">
+                        <div class="box-forma-payment">
+                            <h4>Forma de pagamento:</h4>
+                            <h3 id="installments-brand"></h3>
+                        </div>
+                        <div class="box-forma-payment">
+                            <h4>Status:</h4>
+                            <h3 id="text-status-second"></h3>
+                        </div>
+                        <div class="box-forma-payment-cod">
+                            <h4>Código da transação:</h4>
+                            <h3 id="code-transaction"></h3>
+                        </div>
+                        <div class="box-buttons-download">
+                            <a class="button-back-to-store" href="">Voltar para a loja</a>
+                            <a id="link-voucher" class="button-download-comprov">Baixar comprovante</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="pix-details-payment" class="pix-details-payment">
+                    <div class="box-imagem-pix-payments">
+                        <img src="" alt="">
+                    </div>
+                    <div class="box-qrcode-scan">
+                        <h3>Escaneie o QR code</h3>
+                        <div class="box-row-qrcode-image">
+                            <div class="box-qrcode-image">
+                                <img id="image-qr-code-pix" src="" alt="">
+                            </div>
+                            <div class="box-informations-pix">
+                                <div>
+                                    <h3>1</h3>
+                                    <h4>Abra seu app da sua instituição financeira de sua preferência.</h4>
+                                </div>
+                                <div>
+                                    <h3>2</h3>
+                                    <h4>Acesse a opção Pix/QR Code.</h4>
+                                </div>
+                                <div>
+                                    <h3>3</h3>
+                                    <h4>Aponte a câmera do seu celular para o QR Code Pix</h4>
+                                </div>
+                                <div class="waiting-payment">
+                                    <img class="rotate" id="gif-loading" src="" alt="">
+                                    <div>
+                                        <h4>O código expira em 30 minutos</h4>
+                                        <h4>Estamos aguardando seu pagamento...</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="box-copy-pix-code">
+                        <h3>Ou use o Pix Copia e Cola</h3>
+                        <p>Abra seu app da instituição financeira de sua preferência, selecione pagar via pix e cole o código abaixo</p>
+                        <div class="box-code-pix">
+                            <p id="code-pix"></p>
+                        </div>
+                        <div class="box-button-copy-pix">
+                            <a id="copy-code-pix">Copiar código Pix</a>
+                        </div>
+                    </div>
+                    <div class="box-informations-time-payment">
+                        <p>Em caso de análise, a transação pode demorar até 60 minutos para ser confirmada.</p>
+                        <p>Compra registrada em <span id="data-created-at"></span>. O pedido expira em 30min. Se não for pago nesse prazo, você precisá gerar uma nova compra.</p>
+                    </div>
+
+                </div>
+
+                <div class="details-purchase-conclusion">
+                    <div class="box-title-purchase">
+                        <h2>Detalhes da compra</h2>
+                    </div>
+                    <div class="box-description-course">
+                        <h4 id="name-course-description"></h4>
+                        <h5 id="quanti-course"></h5>
+                        <h3 id="value-unit"></h3>
+                    </div>
+                    <div class="box-total-purchase">
+                        <h4>Valor Total</h4>
+                        <h3 id="value-total"></h3>
+                    </div>
+                </div>
+                <div class="identification-purchase-conclusion">
+                    <div class="box-identification-title">
+                        <h2>Identificação</h2>
+                    </div>
+                    <div class="box-identification">
+                        <h4 id="name-customer"></h4>
+                        <h5 id="phone-customer"></h5>
+                        <h3 id="email-customer"></h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
+<script>
+    let urlApi = "https://url-api"
+
+    let id_course = ""
+
+    async function loadFormMercadoPago(value) {
+        if (value !== 0) {
+            const mp = new MercadoPago("PUBLIC_KEY");
+
+            const cardForm = mp.cardForm({
+                amount: String(value),
+                form: {
+                    id: "form-payment",
+                    cardNumber: {
+                        id: "cardNumber",
+                        placeholder: "1234 1234 1234 1234",
+                    },
+                    expirationDate: {
+                        id: "cardExpiration",
+                        placeholder: "mm/aa",
+                    },
+                    securityCode: {
+                        id: "cardCVV",
+                        placeholder: "123",
+                    },
+                    cardholderName: {
+                        id: "cardHolderName",
+                        placeholder: "Maria Santos Pereira",
+                    },
+                    issuer: {
+                        id: "cardIssuer",
+                        placeholder: "Banco emissor",
+                    },
+                    installments: {
+                        id: "cardInstallments",
+                        placeholder: "Selecione uma opção",
+                    },
+                    identificationType: {
+                        id: "typeDocument",
+                        placeholder: "Tipo de documento",
+                    },
+                    identificationNumber: {
+                        id: "customerCpfCnpj",
+                        placeholder: "Número do documento",
+                    },
+                    cardholderEmail: {
+                        id: "customerEmail",
+                        placeholder: "exemplo@email.com",
+                    },
+                },
+                callbacks: {
+                    onFormMounted: error => {
+                        if (error) return console.warn("Form Mounted handling error: ", error);
+                        console.log("Form mounted");
+                    },
+                    onSubmit: event => {
+                        event.preventDefault();
+
+                        const cardHolderName = document.getElementById('cardHolderName').value;
+                        const cardNumber = document.getElementById('cardNumber').value;
+                        const cardNumberNoSpaces = cardNumber.replace(/\s+/g, '');
+
+                        const cardExpiration = document.getElementById('cardExpiration').value;
+                        const [cardExpirationMonth, cardExpirationYear] = cardExpiration.split('/');
+                        const cardCVV = document.getElementById('cardCVV').value;
+
+                        const customerName = document.getElementById('customerName').value;
+                        const customerEmail = document.getElementById('customerEmail').value;
+                        const customerCpfCnpj = document.getElementById('customerCpfCnpj').value;
+                        const customerPhone = document.getElementById('customerPhone').value;
+                        const cardInstallments = document.getElementById('cardInstallments').value;
+
+                        const customerTypeDocument = document.getElementById('typeDocument').value;
+
+                        if (!cardInstallments || !cardHolderName || !cardNumber || cardNumberNoSpaces.length < 13 || !cardExpirationMonth || !cardExpirationYear || !cardCVV || !customerName || !customerEmail || !customerCpfCnpj || !customerPhone) {
+                            showMessage("Preencha todos os campos!", "Preencha os dados corretamente.")
+                        } else {
+                            let isCheckCpfCnpj = false
+
+                            if (customerTypeDocument === "CPF") {
+                                if (!validarCPF(customerCpfCnpj)) {
+                                    showMessage("Cpf inválido!", "Informe um cpf válido.")
+                                } else {
+                                    isCheckCpfCnpj = true
+                                }
+                            } else if (customerTypeDocument === "CNPJ") {
+                                if (!validarCNPJ(customerCpfCnpj)) {
+                                    showMessage("Cnpj inválido!", "Informe um cnpj válido.")
+                                } else {
+                                    isCheckCpfCnpj = true
+                                }
+                            }
+
+                            if (isCheckCpfCnpj) {
+                                processPayment(cardForm.getCardFormData())
+                            }
+                        }
+
+                        // 5031 4332 1540 6351
+
+                    },
+                    onFetching: (resource) => {
+                        console.log("Fetching resource: ", resource);
+
+                        return () => {
+
+                        };
+                    },
+                    onError: error => {
+                        console.error("Erro no formulário do cartão: ", error);
+                        showMessage("Erro no formulário do cartão", error.message, "");
+                    }
+                },
+            })
+
+            document.getElementById('cardNumber').addEventListener('input', (event) => {
+                const value = event.target.value.replace(/\D/g, '');
+                const bin = value.substring(0, 6);
+
+                if (bin.length === 6) {
+                    mp.getPaymentMethods({
+                        bin
+                    }).then(({
+                        results
+                    }) => {
+                        const paymentMethod = results[0];
+                        const cardBrandImage = document.getElementById('card-brand');
+
+                        if (paymentMethod) {
+                            cardBrandImage.src = paymentMethod.thumbnail;
+                            cardBrandImage.style.display = 'inline';
+                        } else {
+                            cardBrandImage.style.display = 'none';
+                        }
+                    }).catch(error => {
+                        console.error('Erro ao obter métodos de pagamento: ', error);
+                    });
+                }
+            });
+        }
+    }
+
+    const getCourse = async (curso) => {
+        const dataCourse = {
+            id_course: curso
+        }
+
+        if (curso) {
+            axios.post(`${urlApi}/get-course`, dataCourse)
+                .then(product => {
+                    id_course = product.data.id
+                    let valor = product.data.unit_price;
+
+                    document.getElementById("name-course").innerText = product.data.title
+                    document.getElementById("value-course").innerText = formatCurrency(valor)
+
+                    const imageCourse = document.getElementById("image-course")
+                    imageCourse.setAttribute("src", product.data.picture_url)
+
+                    loadFormMercadoPago(valor)
+
+                    fbq('track', 'InitiateCheckout', {
+                        content_name: product.data.title,
+                        content_ids: [product.data.id],
+                        content_type: 'product',
+                        value: valor,
+                        currency: 'BRL'
+                    });
+                })
+                .catch(error => {
+                    if (error.code === "ERR_NETWORK") {
+                        console.log("APi not found", error)
+                    } else {
+
+                    }
+                })
+        }
+    }
+
+    (() => {
+        const url = new URL(window.location.href);
+        const params = new URLSearchParams(url.search);
+
+        if (params.size > 0) {
+            const curso = params.get('course');
+            if (curso) {
+                getCourse(curso)
+            } else {
+                return null
+            }
+        } else {
+            return null
+        }
+    })()
+
+    const processPayment = async (data) => {
+        const customerPhone = document.getElementById('customerPhone').value;
+        const customerName = document.getElementById('customerName').value;
+
+        const nameParts = customerName.split(' ');
+        const first_name = nameParts[0];
+        const last_name = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+        const cleanedPhone = customerPhone.replace(/\D/g, '');
+
+        const firstTwoDigits = cleanedPhone.substring(0, 2);
+        const remainingDigits = cleanedPhone.substring(2);
+
+        const dataRequest = {
+            id_course,
+            first_name,
+            last_name,
+            token: data.token,
+            issuer_id: data.issuerId,
+            payment_method_id: data.paymentMethodId,
+            installments: Number(data.installments),
+            payer: {
+                email: data.cardholderEmail,
+                identification: {
+                    type: data.identificationType,
+                    number: data.identificationNumber,
+                },
+                phone: {
+                    area_code: firstTwoDigits,
+                    number: remainingDigits
+                }
+            },
+        }
+
+        openCloseModalLoading(true, "Processando pagamento")
+
+        axios.post(`${urlApi}/create-order`, dataRequest)
+            .then(response => {
+                openModalConclusionPayment(response.data)
+                openCloseModalLoading(false, "")
+            })
+            .catch(error => {
+                console.log(error)
+                if (error.response.data.cause[0].code === 3032) {
+                    showMessage("Código de segurança inválido!", "")
+                } else {
+                    showMessage("Algum erro inesperado!", "")
+                }
+                openCloseModalLoading(false, "")
+            })
+    }
+
+    const processPaymentPix = async () => {
+        const customerName = document.getElementById('customerName').value;
+        const customerEmail = document.getElementById('customerEmail').value;
+        const customerCpfCnpj = document.getElementById('customerCpfCnpj').value;
+        const customerDDI = document.getElementById('customerDDI').value;
+        const customerPhone = document.getElementById('customerPhone').value;
+
+        const customerTypeDocument = document.getElementById('typeDocument').value;
+        const cleanedPhone = customerPhone.replace(/\D/g, '');
+
+        if (!customerName || !customerEmail || !customerPhone || !customerTypeDocument) {
+            showMessage("Preencha todos os campos!", "Preencha os dados corretamente.")
+        } else {
+
+            let isCheckCpfCnpj = false
+
+            if (customerTypeDocument === "CPF") {
+                if (!validarCPF(customerCpfCnpj)) {
+                    showMessage("Cpf inválido!", "Informe um cpf válido.")
+                } else {
+                    isCheckCpfCnpj = true
+                }
+            } else if (customerTypeDocument === "CNPJ") {
+                if (!validarCNPJ(customerCpfCnpj)) {
+                    showMessage("Cnpj inválido!", "Informe um cnpj válido.")
+                } else {
+                    isCheckCpfCnpj = true
+                }
+            }
+
+            if (isCheckCpfCnpj) {
+                const cleanedPhone = customerPhone.replace(/\D/g, '');
+
+                const firstTwoDigits = cleanedPhone.substring(0, 2);
+                const remainingDigits = cleanedPhone.substring(2);
+
+
+                const nameParts = customerName.split(' ');
+                const first_name = nameParts[0];
+                const last_name = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+                const data = {
+                    id_course,
+                    first_name,
+                    last_name,
+                    payer: {
+                        email: customerEmail,
+                        identification: {
+                            type: customerTypeDocument,
+                            number: customerCpfCnpj,
+                        },
+                        phone: {
+                            area_code: firstTwoDigits,
+                            number: remainingDigits
+                        }
+                    },
+                }
+
+                openCloseModalLoading(true, "Gerando um código de pagamento")
+
+                axios.post(`${urlApi}/create-order-pix`, data)
+                    .then(response => {
+                        if (response.data) {
+                            openModalConclusionPayment(response.data)
+                            openCloseModalLoading(false, "")
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao criar o pedido:', error.response ? error.response.data : error.message);
+                        showMessage("Algum erro inesperado!", "")
+                        openCloseModalLoading(false, "")
+                    })
+            }
+
+        }
+    }
+
+    async function changeNumberCard(event) {
+        const cardNumber = event.target.value;
+
+        const cardNumberNoSpaces = cardNumber.replace(/\s+/g, '');
+
+        // Valor formatado para campo de cartão
+        const value = cardNumber.replace(/\D/g, '');
+        const formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+        event.target.value = formattedValue
+    }
+
+    function openModalConclusionPayment(data) {
+        console.log(data)
+        const formPayment = document.getElementById("form-payment")
+        const boxConclusion = document.getElementById("conclusion-payment")
+
+        const paymentDetailsConclusion = document.getElementById("payment-details-conclusion")
+        const pixDetailsPayment = document.getElementById("pix-details-payment")
+
+
+        const boxStatusIcon = document.getElementById("box-status-icons")
+        const textStatus = document.getElementById("text-status")
+        const valuePurchase = document.getElementById("value-purchase")
+        const installmentsBrand = document.getElementById("installments-brand")
+        const textStatusSecond = document.getElementById("text-status-second")
+        const codeTransaction = document.getElementById("code-transaction")
+
+        const nameCourseDescription = document.getElementById("name-course-description")
+        const quantiCourse = document.getElementById("quanti-course")
+        const valueUnit = document.getElementById("value-unit")
+        const valueTotal = document.getElementById("value-total")
+        const nameCustomer = document.getElementById("name-customer")
+        const phoneCustomer = document.getElementById("phone-customer")
+        const emailCustomer = document.getElementById("email-customer")
+
+        if (data.payment_type_id === "credit_card" || data.payment_type_id === "debit_card") {
+            if (data.status === "authorized" || data.status === "approved") {
+
+                formPayment.style.display = "none"
+                boxConclusion.style.display = "flex"
+
+                boxStatusIcon.innerHTML = "<i class='fa-solid fa-check fa-2xl'></i>"
+                boxStatusIcon.classList.add("box-success-paid")
+
+                textStatus.innerText = "Seu pagamento foi aprovado"
+
+                valuePurchase.innerText = `${formatCurrency(data.transaction_details.total_paid_amount)}`
+
+                installmentsBrand.innerText = `${data.installments} parcela(s) - ${data.payment_method_id}`
+
+                textStatusSecond.innerText = "Aprovado"
+
+                codeTransaction.innerText = data.id
+
+
+                nameCourseDescription.innerText = data.additional_info.items[0].title
+                quantiCourse.innerText = `${data.additional_info.items[0].quantity} UN.`
+                valueUnit.innerText = formatCurrency(Number(data.additional_info.items[0].unit_price))
+
+                valueTotal.innerText = formatCurrency(Number(data.additional_info.items[0].unit_price))
+
+                nameCustomer.innerText = `${data.additional_info.payer.first_name} ${data.additional_info.payer.last_name}`
+                phoneCustomer.innerText = `(${data.additional_info.payer.phone.area_code}) ${data.additional_info.payer.phone.number}`
+                emailCustomer.innerText = data.payer.email
+
+                fbq('track', 'Purchase', {
+                    content_name: data.additional_info.items[0].title,
+                    content_ids: [data.id],
+                    content_type: 'curso',
+                    value: data.additional_info.items[0].unit_price,
+                    currency: 'BRL'
+                });
+            } else if (data.status === "rejected") {
+                showMessage("Cartão rejeitado", "")
+            } else if (data.status === "in_process") {
+                showMessage("Cartão em processo", "")
+            }
+        }
+
+        if (data.payment_method_id === "pix" && data.payment_type_id === "bank_transfer") {
+            formPayment.style.display = "none"
+            boxConclusion.style.display = "flex"
+
+            paymentDetailsConclusion.style.display = "none"
+            pixDetailsPayment.style.display = "flex"
+
+            const imageQrCodePix = document.getElementById("image-qr-code-pix")
+            const codePix = document.getElementById("code-pix")
+            const dataCreateAt = document.getElementById("data-created-at")
+
+            imageQrCodePix.setAttribute("src", `data:image/jpeg;base64,${data.point_of_interaction.transaction_data.qr_code_base64}`)
+
+            codePix.innerText = data.point_of_interaction.transaction_data.qr_code
+
+
+            const date = new Date(data.date_created);
+
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+
+            const formattedDate = `${day}/${month}/${year}`;
+            const formattedTime = `${hours}:${minutes}`;
+
+            dataCreateAt.innerText = `${formattedDate} às ${formattedTime}`
+
+            nameCourseDescription.innerText = data.additional_info.items[0].title
+            quantiCourse.innerText = `${data.additional_info.items[0].quantity} UN.`
+            valueUnit.innerText = formatCurrency(Number(data.additional_info.items[0].unit_price))
+
+            valueTotal.innerText = formatCurrency(Number(data.transaction_details.total_paid_amount))
+
+            nameCustomer.innerText = `${data.additional_info.payer.first_name} ${data.additional_info.payer.last_name}`
+            phoneCustomer.innerText = `(${data.additional_info.payer.phone.area_code}) ${data.additional_info.payer.phone.number}`
+            emailCustomer.innerText = data.payer.email
+
+            getTransactionPix(data.id)
+        }
+    }
+
+    const getTransactionPix = async (orderCode) => {
+        setTimeout(async () => {
+            axios.post(`${urlApi}/get-transaction-orders-status/${orderCode}`)
+                .then(responseOrders => {
+                    if (responseOrders.data.status === "approved") {
+                        console.log(responseOrders)
+                        const paymentDetailsConclusion = document.getElementById("payment-details-conclusion")
+                        const pixDetailsPayment = document.getElementById("pix-details-payment")
+
+                        pixDetailsPayment.style.display = "none"
+                        paymentDetailsConclusion.style.display = "flex"
+
+
+                        const boxStatusIcon = document.getElementById("box-status-icons")
+                        const textStatus = document.getElementById("text-status")
+                        const valuePurchase = document.getElementById("value-purchase")
+                        const installmentsBrand = document.getElementById("installments-brand")
+                        const textStatusSecond = document.getElementById("text-status-second")
+                        const codeTransaction = document.getElementById("code-transaction")
+
+
+                        boxStatusIcon.innerHTML = "<i class='fa-solid fa-check fa-2xl'></i>"
+                        boxStatusIcon.classList.add("box-success-paid")
+
+                        textStatus.innerText = "Seu pagamento foi aprovado"
+
+                        valuePurchase.innerText = `${formatCurrency(responseOrders.data.transaction_details.total_paid_amount)}`
+
+                        installmentsBrand.innerText = `Pix - Débito Online`
+
+                        textStatusSecond.innerText = "Aprovado"
+
+                        codeTransaction.innerText = responseOrders.data.id
+
+                        fbq('track', 'Purchase', {
+                            content_name: responseOrders.data.additional_info.items[0].title,
+                            content_ids: [responseOrders.data.id],
+                            content_type: 'curso',
+                            value: responseOrders.data.additional_info.items[0].unit_price,
+                            currency: 'BRL'
+                        });
+
+                        console.log("Pagamento aceito!")
+                    } else {
+                        getTransactionPix(orderCode)
+                        console.log(responseOrders)
+                        console.log("Pagamento não efetuado ainda!")
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro ao verificar pedido!")
+                })
+        }, 10000)
+    }
+
+    function formatInputNumber(event) {
+        const input = event.target;
+        let value = input.value.replace(/\D/g, '');
+        input.value = value;
+    }
+
+    function formatExpiryDate(event) {
+        const input = event.target;
+        let value = input.value.replace(/\D/g, '');
+
+        if (value.length > 4) {
+            value = value.slice(0, 4);
+        }
+
+        if (value.length > 2) {
+            value = value.slice(0, 2) + '/' + value.slice(2);
+        }
+
+        input.value = value;
+    }
+
+    function formatPhone(input) {
+        let phone = input.value.replace(/\D/g, '');
+
+        if (phone.length <= 10) {
+            phone = phone.replace(/(\d{2})(\d)/, '($1) $2');
+            phone = phone.replace(/(\d{4})(\d)/, '$1-$2');
+        } else {
+            phone = phone.replace(/(\d{2})(\d)/, '($1) $2');
+            phone = phone.replace(/(\d{5})(\d)/, '$1-$2');
+        }
+        input.value = phone;
+    }
+
+    function showMessage(errorMsg, infoMsg) {
+        const declinedCardBox = document.getElementById("box-error-credit-card")
+        const error = document.querySelector("#box-error-credit-card #error")
+        const infoError = document.querySelector("#box-error-credit-card #info-error")
+
+        error.innerText = errorMsg
+        infoError.innerText = infoMsg
+
+        declinedCardBox.style.display = "flex"
+    }
+
+    function hideMessage() {
+        const declinedCardBox = document.getElementById("box-error-credit-card")
+        const error = document.querySelector("#box-error-credit-card #error")
+        const infoError = document.querySelector("#box-error-credit-card #info-error")
+
+        declinedCardBox.style.display = "none"
+        error.innerText = ""
+        infoError.innerText = ""
+    }
+
+    const formatCurrency = (amount) => {
+        return amount.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        });
+    };
+
+    window.addEventListener('beforeunload', async function(e) {
+
+        e.preventDefault();
+        e.returnValue = '';
+        fbq('trackCustom', 'AbandonedCart');
+
+        return 'Tem certeza que deseja sair da página?';
+    });
+
+    function onInputCpf(event) {
+        let value = event.value.replace(/\D/g, ''); // Remove all non-digit characters
+        const inputDocument = document.getElementById("customerCpfCnpjView");
+        const inputDocumentHidden = document.getElementById("customerCpfCnpj");
+
+        const selectTypeDocument = document.getElementById("typeDocument")
+
+        inputDocumentHidden.value = value
+
+        if (value.length === 11) {
+            // CPF Formatting
+            if (!validarCPF(value)) {
+                inputDocument.style.borderColor = "red";
+            } else {
+                inputDocument.style.borderColor = "#CCCCCC";
+            }
+
+            if (value.length > 3 && value.length <= 6) {
+                value = value.replace(/(\d{3})(\d+)/, '$1.$2');
+            }
+            if (value.length > 6 && value.length <= 9) {
+                value = value.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
+            }
+            if (value.length > 9) {
+                value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+            }
+            selectTypeDocument.value = "CPF"
+        } else if (value.length === 14) {
+            // CNPJ Formatting
+            if (!validarCNPJ(value)) {
+                inputDocument.style.borderColor = "red";
+            } else {
+                inputDocument.style.borderColor = "#CCCCCC";
+            }
+
+            if (value.length > 2 && value.length <= 5) {
+                value = value.replace(/(\d{2})(\d+)/, '$1.$2');
+            }
+            if (value.length > 5 && value.length <= 8) {
+                value = value.replace(/(\d{2})(\d{3})(\d+)/, '$1.$2.$3');
+            }
+            if (value.length > 8 && value.length <= 12) {
+                value = value.replace(/(\d{2})(\d{3})(\d{3})(\d+)/, '$1.$2.$3/$4');
+            }
+            if (value.length > 12) {
+                value = value.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d+)/, '$1.$2.$3/$4-$5');
+            }
+            selectTypeDocument.value = "CNPJ"
+        } else {
+            inputDocument.style.borderColor = "#CCCCCC";
+            selectTypeDocument.value = "CPF"
+        }
+
+        event.value = value;
+    }
+
+
+
+    function validarCPF(cpf) {
+        cpf = cpf.replace(/[^\d]+/g, '');
+
+        if (cpf.length !== 11 ||
+            /^(\d)\1+$/.test(cpf)) {
+            return false;
+        }
+
+        let soma = 0;
+        let resto;
+
+        for (let i = 1; i <= 9; i++) {
+            soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+        }
+
+        resto = (soma * 10) % 11;
+        if ((resto === 10) || (resto === 11)) resto = 0;
+        if (resto !== parseInt(cpf.substring(9, 10))) return false;
+
+        soma = 0;
+        for (let i = 1; i <= 10; i++) {
+            soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+        }
+
+        resto = (soma * 10) % 11;
+        if ((resto === 10) || (resto === 11)) resto = 0;
+        if (resto !== parseInt(cpf.substring(10, 11))) return false;
+
+        return true;
+    }
+
+    function validarCNPJ(cnpj) {
+        // Remove caracteres não numéricos
+        cnpj = cnpj.replace(/[^\d]+/g, '');
+
+        // Verifica o comprimento do CNPJ
+        if (cnpj.length !== 14 || /^(\d)\1+$/.test(cnpj)) {
+            return false;
+        }
+
+        // Calcula o primeiro dígito verificador
+        let soma = 0;
+        let resto;
+        const pesos1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+
+        for (let i = 0; i < 12; i++) {
+            soma += parseInt(cnpj.charAt(i)) * pesos1[i];
+        }
+
+        resto = soma % 11;
+        if (resto < 2) {
+            resto = 0;
+        } else {
+            resto = 11 - resto;
+        }
+        if (resto !== parseInt(cnpj.charAt(12))) {
+            return false;
+        }
+
+        // Calcula o segundo dígito verificador
+        soma = 0;
+        const pesos2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+
+        for (let i = 0; i < 13; i++) {
+            soma += parseInt(cnpj.charAt(i)) * pesos2[i];
+        }
+
+        resto = soma % 11;
+        if (resto < 2) {
+            resto = 0;
+        } else {
+            resto = 11 - resto;
+        }
+        if (resto !== parseInt(cnpj.charAt(13))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    document.querySelectorAll("#box-types-payments > a").forEach((button) => {
+        button.addEventListener("click", (event) => {
+            const boxContainers = document.querySelectorAll("#box-types-containers > div")
+            boxContainers.forEach((box) => {
+                if (event.target.id == box.id) {
+                    if (!box.classList.contains("box-activate")) {
+                        box.classList.add("box-activate")
+                        if (box.id == "pix") {
+                            document.getElementById("purchase").style.display = "none"
+                        } else {
+                            document.getElementById("purchase").style.display = "flex"
+                        }
+                    }
+                } else {
+                    box.classList.remove("box-activate")
+                }
+            })
+            document.querySelectorAll("#box-types-payments > a").forEach((button) => {
+                button.classList.remove("active-button-payments")
+            })
+            event.target.classList.add("active-button-payments")
+        })
+    })
+
+    document.getElementById('copy-code-pix').addEventListener('click', function() {
+        const textToCopy = document.getElementById('code-pix').innerText;
+
+        const textarea = document.createElement('textarea');
+        textarea.value = textToCopy;
+
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+
+        textarea.select();
+        textarea.setSelectionRange(0, 99999);
+
+        try {
+            document.execCommand('copy');
+            alert('Texto copiado com sucesso!');
+        } catch (err) {
+            alert('Falha ao copiar o texto.');
+        }
+
+        document.body.removeChild(textarea);
+    });
+
+    document.getElementById("link-voucher").addEventListener("click", (event) => {
+        document.getElementById("container-form-elementor").style.width = "100%"
+        window.print();
+        document.getElementById("container-form-elementor").style.width = "60%"
+    })
+
+    function openCloseModalLoading(loading, msg) {
+        document.getElementById("message-loading").innerText = msg
+        const buttonPurchase = document.getElementById("purchase")
+        const buttonPix = document.getElementById("button-pix")
+        const boxLoading = document.getElementById("loading-payment")
+        if (loading) {
+            buttonPurchase.setAttribute("disabled", "")
+            buttonPix.setAttribute("disabled", "")
+            boxLoading.style.display = "flex"
+        } else {
+            buttonPurchase.removeAttribute("disabled")
+            buttonPix.removeAttribute("disabled")
+            boxLoading.style.display = "none"
+        }
+    }
+</script>
