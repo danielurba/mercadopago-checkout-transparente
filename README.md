@@ -1,1 +1,1 @@
-# mercadopago-checkout-transparente
+# Mercado Pago Checkout Transparente - API Node - Frontend

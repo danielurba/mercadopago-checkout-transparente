@@ -1,0 +1,34 @@
+[
+    {
+        "reference_id": "curso-01",
+        "name": "Curso 01",
+        "quantity": 1,
+        "installments": 3,
+        "unit_amount": 19900,
+        "image_url": ""
+    },
+    {
+        "reference_id": "curso-01-delay",
+        "name": "Curso 01 Delay",
+        "quantity": 1,
+        "installments": 5,
+        "unit_amount": 14890,
+        "image_url": ""
+    },
+    {
+        "reference_id": "curso-01-aguardando",
+        "name": "Curso 01 aguardando",
+        "quantity": 1,
+        "installments": 5,
+        "unit_amount": 24890,
+        "image_url": ""
+    },
+    {
+        "reference_id": "curso-01-instantaneo",
+        "name": "Curso 01 Instantaneo",
+        "quantity": 1,
+        "installments": 5,
+        "unit_amount": 7890,
+        "image_url": ""
+    }
+]
